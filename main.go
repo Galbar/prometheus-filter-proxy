@@ -80,10 +80,10 @@ func handleQuery(filter string, rw http.ResponseWriter, r *http.Request) {
 	log.WithFields(log.Fields{"url": url.String()}).Debug("starting request to upstream")
 	var resp *http.Response
 	if r.Method == "GET" {
-		resp, err = http.PostForm(url.String(), *params)
-	} else {
 		url.RawQuery = params.Encode()
 		resp, err = http.Get(url.String())
+	} else {
+		resp, err = http.PostForm(url.String(), *params)
 	}
 	if err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
