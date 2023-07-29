@@ -76,9 +76,10 @@ func handleQuery(filter string, rw http.ResponseWriter, r *http.Request) {
 		Scheme:   "http",
 		Host:     *upstream,
 		Path:     fmt.Sprintf("%s%s", *upstreamPrefixPath, r.URL.Path), //FIXME
+		RawQuery: params.Encode(),
 	}
 	log.WithFields(log.Fields{"url": url.String()}).Debug("starting request to upstream")
-	resp, err := http.PostForm(url.String(), *params)
+	resp, err := http.Get(url.String())
 	if err != nil {
 		rw.WriteHeader(http.StatusInternalServerError)
 		log.WithFields(log.Fields{"err": err}).Warn("upstream request failed")
@@ -113,12 +114,12 @@ type router struct {
 }
 
 func (r router) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	// if req.Method != "GET" {
-	// 	rw.WriteHeader(http.StatusBadRequest)
-	// 	rw.Write([]byte("Unsupported method\n"))
-	// 	log.WithFields(log.Fields{"method": req.Method, "path": req.URL.String()}).Warn("unsupported method")
-	// 	return
-	// }
+	if req.Method != "GET" {
+		rw.WriteHeader(http.StatusBadRequest)
+		rw.Write([]byte("Unsupported method\n"))
+		log.WithFields(log.Fields{"method": req.Method, "path": req.URL.String()}).Warn("unsupported method")
+		return
+	}
 	path := req.URL.Path
 	m := urlPattern.FindStringSubmatch(path)
 	if len(m) != 3 {
